@@ -2,27 +2,21 @@ from flask import Flask, request
 from werkzeug.utils import secure_filename
 import os
 
-from resume_parser import extract_text_from_pdf
+from resume_parser import extract_text
+from text_processor import clean_text
 
 
 app = Flask(__name__)
 
-# Folder where uploaded resumes will be stored
 UPLOAD_FOLDER = "uploads"
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-# Maximum file size: 5 MB
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
-
-ALLOWED_EXTENSIONS = {"pdf"}
+ALLOWED_EXTENSIONS = {"pdf", "docx"}
 
 
 def allowed_file(filename):
-    """
-    Check whether the uploaded file is a PDF.
-    """
 
     return (
         "." in filename
@@ -38,9 +32,11 @@ def home():
 
     <h2>Upload Your Resume</h2>
 
+    <p>Supported formats: PDF, DOCX</p>
+
     <form action="/upload" method="POST" enctype="multipart/form-data">
 
-        <input type="file" name="resume" accept=".pdf">
+        <input type="file" name="resume" accept=".pdf,.docx">
 
         <br><br>
 
@@ -62,7 +58,7 @@ def upload_resume():
         return "Please select a resume."
 
     if not allowed_file(file.filename):
-        return "Only PDF files are allowed."
+        return "Only PDF and DOCX files are allowed."
 
     filename = secure_filename(file.filename)
 
@@ -73,15 +69,22 @@ def upload_resume():
 
     file.save(filepath)
 
-    # Extract text from PDF
-    resume_text = extract_text_from_pdf(filepath)
+    # Extract resume text
+    resume_text = extract_text(filepath)
+
+    # Clean resume text
+    cleaned_text = clean_text(resume_text)
 
     return f"""
     <h1>Resume Uploaded Successfully!</h1>
 
-    <h2>Extracted Resume Text</h2>
+    <h2>Original Resume Text</h2>
 
     <pre>{resume_text}</pre>
+
+    <h2>Cleaned Resume Text</h2>
+
+    <pre>{cleaned_text}</pre>
     """
 
 
