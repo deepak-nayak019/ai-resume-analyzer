@@ -4,6 +4,7 @@ import os
 
 from resume_parser import extract_text
 from text_processor import clean_text
+from skill_extractor import extract_skills
 
 
 app = Flask(__name__)
@@ -72,11 +73,24 @@ def upload_resume():
     # Extract resume text
     resume_text = extract_text(filepath)
 
-    # Clean resume text
     cleaned_text = clean_text(resume_text)
+
+    detected_skills = extract_skills(cleaned_text)
+
+    skills_html = ""
+
+    for skill in detected_skills:
+        skills_html += f"<li>{skill}</li>"
+
 
     return f"""
     <h1>Resume Uploaded Successfully!</h1>
+
+    <h2>Detected Skills</h2>
+
+    <ul>
+    {skills_html}
+    </ul>
 
     <h2>Original Resume Text</h2>
 
